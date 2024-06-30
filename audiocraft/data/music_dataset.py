@@ -246,6 +246,7 @@ class MusicDataset(InfoAudioDataset):
                 sample_rate=[info.sample_rate], path=[info.meta.path], seek_time=[info.seek_time])
             music_info.joint_embed[att] = joint_embed_cond
 
+
         return wav, music_info
 
 

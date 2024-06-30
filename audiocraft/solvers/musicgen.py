@@ -33,9 +33,9 @@ class MusicGenSolver(base.StandardSolver):
 
     Used in: https://arxiv.org/abs/2306.05284
     """
-    DATASET_TYPE: builders.DatasetType = builders.DatasetType.MUSIC
 
     def __init__(self, cfg: omegaconf.DictConfig):
+        self.DATASET_TYPE = builders.DatasetType.MUSIC if not cfg.deep_lake.enable else builders.DatasetType.DEEP_LAKE
         super().__init__(cfg)
         # easier access to sampling parameters
         self.generation_params = {
@@ -599,7 +599,7 @@ class MusicGenSolver(base.StandardSolver):
             self._cached_batch_writer.start_epoch(self.epoch)
         if self._cached_batch_loader is None:
             dataset = get_dataset_from_loader(self.dataloaders['train'])
-            assert isinstance(dataset, AudioDataset)
+            # assert isinstance(dataset, AudioDataset)
             dataset.current_epoch = self.epoch
         else:
             self._cached_batch_loader.start_epoch(self.epoch)
@@ -648,7 +648,7 @@ class MusicGenSolver(base.StandardSolver):
             lp = self.log_progress(f'{evaluate_stage_name} inference', loader, total=updates, updates=self.log_updates)
             average = flashy.averager()
             dataset = get_dataset_from_loader(loader)
-            assert isinstance(dataset, AudioDataset)
+            # assert isinstance(dataset, AudioDataset)
             self.logger.info(f"Computing evaluation metrics on {len(dataset)} samples")
 
             for idx, batch in enumerate(lp):

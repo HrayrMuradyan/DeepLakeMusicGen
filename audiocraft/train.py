@@ -14,6 +14,7 @@ import multiprocessing
 import os
 from pathlib import Path
 import sys
+import platform
 import typing as tp
 
 from dora import git_save, hydra_main, XP
@@ -108,7 +109,9 @@ def init_seed_and_system(cfg):
     import random
     from audiocraft.modules.transformer import set_efficient_attention_backend
 
-    multiprocessing.set_start_method(cfg.mp_start_method)
+    if platform.system() == "Linux":
+        print("KM: Linux System is detected, starting multiprocessing")
+        multiprocessing.set_start_method(cfg.mp_start_method)
     logger.debug('Setting mp start method to %s', cfg.mp_start_method)
     random.seed(cfg.seed)
     np.random.seed(cfg.seed)

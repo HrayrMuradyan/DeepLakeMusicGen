@@ -1,0 +1,10 @@
+# @package __global__
+
+datasource:
+  max_sample_rate: 44100
+  max_channels: 2
+
+  train: hub://hrayr/audio_dataset3
+  valid: hub://hrayr/audio_dataset3
+  evaluate: hub://hrayr/audio_dataset3
+  generate: hub://hrayr/audio_dataset3

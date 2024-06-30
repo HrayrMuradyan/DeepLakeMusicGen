@@ -13,6 +13,7 @@ from enum import Enum
 import logging
 import typing as tp
 
+import os
 import dora
 import flashy
 import omegaconf
@@ -28,6 +29,7 @@ except ImportError:
 
 from .base import StandardSolver
 from .. import adversarial, data, losses, metrics, optim
+import audiocraft
 from ..utils.utils import dict_from_config, get_loader
 
 
@@ -38,6 +40,7 @@ class DatasetType(Enum):
     AUDIO = "audio"
     MUSIC = "music"
     SOUND = "sound"
+    DEEP_LAKE = "deep_lake"
 
 
 def get_solver(cfg: omegaconf.DictConfig) -> StandardSolver:
@@ -319,6 +322,13 @@ def get_audio_datasets(cfg: omegaconf.DictConfig,
     splits_cfg['generate'] = dataset_cfg.pop('generate')
     execute_only_stage = cfg.get('execute_only', None)
 
+    if dataset_type == DatasetType.DEEP_LAKE:
+        print('-'*100)
+        deeplake_token = input('To use the Deep Lake Vector Store you need a token. Please copy the token and paste it here: ')
+        print('-'*100)
+
+        os.environ['ACTIVELOOP_TOKEN'] = deeplake_token
+
     for split, path in cfg.datasource.items():
         if not isinstance(path, str):
             continue  # skipping this as not a path
@@ -344,10 +354,13 @@ def get_audio_datasets(cfg: omegaconf.DictConfig,
 
         num_samples = kwargs['num_samples']
         shuffle = kwargs['shuffle']
+        segment_duration = kwargs['segment_duration']
 
         return_info = kwargs.pop('return_info')
         batch_size = kwargs.pop('batch_size', None)
         num_workers = kwargs.pop('num_workers')
+
+        print(kwargs)
 
         if dataset_type == DatasetType.MUSIC:
             dataset = data.music_dataset.MusicDataset.from_meta(path, **kwargs)
@@ -355,6 +368,14 @@ def get_audio_datasets(cfg: omegaconf.DictConfig,
             dataset = data.sound_dataset.SoundDataset.from_meta(path, **kwargs)
         elif dataset_type == DatasetType.AUDIO:
             dataset = data.info_audio_dataset.InfoAudioDataset.from_meta(path, return_info=return_info, **kwargs)
+        elif dataset_type == DatasetType.DEEP_LAKE:
+            parts = path.split("hub:\\")
+            if len(parts) != 2:
+                raise ValueError("Invalid path format")
+            deeplake_path = "hub://" + parts[1].replace("\\", "/")
+
+            dataset = data.deep_lake_dataset.DeepLakeDataset(deeplake_path, num_workers=num_workers, batch_size=batch_size, target_sr=sample_rate, 
+                                                            target_channels=channels, shuffle=shuffle, segment_duration=segment_duration, return_info=return_info, num_samples=num_samples)
         else:
             raise ValueError(f"Dataset type is unsupported: {dataset_type}")
 

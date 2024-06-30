@@ -11,12 +11,22 @@ defaults:
 
 autocast: true
 autocast_dtype: float16
-
 # EnCodec large trained on mono-channel music audio sampled at 32khz
 # with a total stride of 640 leading to 50 frames/s.
 # rvq.n_q=4, rvq.bins=2048, no quantization dropout
 # (transformer_lm card and n_q must be compatible)
 compression_model_checkpoint: //pretrained/facebook/encodec_32khz
+
+#KM NEW PARAMETERS
+memory_saver:
+  enable: true
+  compression_frame_rate: 50
+  token_dropout_p: 0.0
+  description_dropout_p: 0.0
+
+#HM Deep Lake
+deep_lake:
+  enable: true
 
 channels: 1
 sample_rate: 32000
@@ -25,16 +35,14 @@ deadlock:
   use: true  # deadlock detection
 
 dataset:
-  batch_size: 192  # 32 GPUs
+  batch_size: 6  # 32 GPUs
+  segment_duration: 30
+    # segment_duration: 5
   sample_on_weight: false  # Uniform sampling all the way
   sample_on_duration: false  # Uniform sampling all the way
 
-
-#HM Deep Lake
-deep_lake:
-  enable: false
-
 generate:
+  every: 5
   lm:
     use_sampling: true
     top_k: 250
@@ -42,8 +50,8 @@ generate:
 
 optim:
   epochs: 500
-  optimizer: dadam
-  lr: 1
+  optimizer: adamw
+  lr: 1e-4
   ema:
     use: true
     updates: 10
@@ -55,6 +63,6 @@ logging:
 schedule:
   lr_scheduler: cosine
   cosine:
-    warmup: 4000
+    warmup: 100
     lr_min_ratio: 0.0
     cycle_length: 1.0
