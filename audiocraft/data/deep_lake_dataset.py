@@ -17,12 +17,7 @@ class DeepLakeDataset(torch.utils.data.Dataset):
         self.pad = pad
         self.return_info = return_info
         self.num_samples = num_samples
-        self.loader = self.deep_lake_ds.pytorch(
-                num_workers = num_workers,
-                batch_size=batch_size,
-                tensors=list(self.deep_lake_ds.tensors.keys()),
-                shuffle=shuffle
-            )
+
 
 
     def collater(self, samples):

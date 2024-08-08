@@ -1,4 +1,4 @@
-from pytube import YouTube
+from pytubefix import YouTube
 from moviepy.editor import *
 import os
 import shutil
@@ -12,7 +12,7 @@ from audiocraft.data.audio import audio_read
 import numpy as np
 import soundfile as sf
 
-from pytube.innertube import _default_clients 
+from pytubefix.innertube import _default_clients 
 _default_clients["ANDROID_MUSIC"] = _default_clients["IOS"]
 
 import warnings
@@ -66,11 +66,8 @@ def download_split(split='train', link_core_path='../Dataset/youtube_music_links
         for line in opened_link_file:
             link_info_dict = json.loads(line)
             youtube_link = link_info_dict.pop('link')
-            try:
-                download_audio(url=youtube_link, link_info_dict=link_info_dict, save_path=save_path, overwrite=overwrite)
-                time.sleep(0.75)
-            except Exception as e:
-                print(f'-----------ERROR------------- {line} -> ', e, )
+            download_audio(url=youtube_link, link_info_dict=link_info_dict, save_path=save_path, overwrite=overwrite)
+            time.sleep(0.75)
 
 def divide_into_clips(split='train', raw_music_path='../Dataset/raw_music/', clip_duration=30, stride=15):
     raw_music_full_path = Path(raw_music_path) / split
@@ -86,7 +83,6 @@ def divide_into_clips(split='train', raw_music_path='../Dataset/raw_music/', cli
             link_info_dict = json.load(link_info_json_file)
 
         interval_splits = link_info_dict.pop('split')
-        interval_labels = link_info_dict['label'].split(', ')
 
         if interval_splits:
             end_index = int(len(audio)/sr) + 1
@@ -101,7 +97,6 @@ def divide_into_clips(split='train', raw_music_path='../Dataset/raw_music/', cli
         for interval_index, splitted_audio in enumerate(splitted_audios):
             try:
                 interval_label = interval_labels[interval_index]
-                link_info_dict['label'] = interval_label
                 points_per_clip = clip_duration * sr
                 step_size = stride * sr
                 total_clips = int(np.ceil((len(splitted_audio) - points_per_clip) / step_size)) + 1
@@ -149,7 +144,6 @@ def prepare_attributes(split='train', core_music_folder='../Dataset/raw_music/')
         attribute_dict["name"] = music_file_name
         attribute_dict["instrument"] = ""
         attribute_dict["moods"] = []
-        attribute_dict["label"] = link_info_dict["label"]
 
         with open(json_file_path, "w") as attr_json_file:
             json.dump(attribute_dict, attr_json_file)
@@ -157,7 +151,7 @@ def prepare_attributes(split='train', core_music_folder='../Dataset/raw_music/')
         print('\033[1mSaved Json file for:\033[0m', music_file_name)
 
 
-def fill_json(music_file, n_best_preds=3, essentia_weights_path = '../Dataset/essentia_weights/'):
+def fill_json(music_file):
     music_file_str = str(music_file)
     json_file_path = music_file.with_suffix('.json')
     
@@ -168,16 +162,13 @@ def fill_json(music_file, n_best_preds=3, essentia_weights_path = '../Dataset/es
     with open(json_file_path, 'r') as unfilled_json_file:
         json_data = json.load(unfilled_json_file)
 
-    labeling_type = json_data['label']
-
-
     json_data['duration'] = sec_len
     json_data['sample_rate'] = sr
-    json_data['instrument'] = 'Piano, Violin'
-    json_data['moods'] = ['Happy', 'Energetic']
+    json_data['instrument'] = None
+    json_data['moods'] = None
 
     with open(json_file_path, "w") as filled_json_file:
-            json.dump(json_data, filled_json_file)
+        json.dump(json_data, filled_json_file)
 
     jsonl_data = {}
 
@@ -190,10 +181,8 @@ def fill_json(music_file, n_best_preds=3, essentia_weights_path = '../Dataset/es
 
     return jsonl_data
 
-    print('Done:', music_file)
 
-
-def fill_json_split(split='train', core_music_folder='../Dataset/raw_music/', split_jsonl_path='egs/', essentia_weights_path='../Dataset/essentia_weights/', n_best_preds=3):
+def fill_json_split(split='train', core_music_folder='../Dataset/raw_music/', split_jsonl_path='egs/'):
     split_jsonl_main_path = Path(split_jsonl_path) / split
     split_jsonl_full_path = split_jsonl_main_path / 'data.jsonl'
     
@@ -205,7 +194,7 @@ def fill_json_split(split='train', core_music_folder='../Dataset/raw_music/', sp
         
     with open(split_jsonl_full_path, 'w') as split_jsonl_file:
         for music_file in all_music_files:
-            music_jsonl_info = fill_json(music_file, n_best_preds=n_best_preds, essentia_weights_path=essentia_weights_path)
+            music_jsonl_info = fill_json(music_file)
             music_jsonl_str = json.dumps(music_jsonl_info)
             split_jsonl_file.write(music_jsonl_str + '\n')
 
