@@ -96,7 +96,6 @@ def divide_into_clips(split='train', raw_music_path='../Dataset/raw_music/', cli
         clip_count = 0
         for interval_index, splitted_audio in enumerate(splitted_audios):
             try:
-                interval_label = interval_labels[interval_index]
                 points_per_clip = clip_duration * sr
                 step_size = stride * sr
                 total_clips = int(np.ceil((len(splitted_audio) - points_per_clip) / step_size)) + 1
@@ -113,7 +112,7 @@ def divide_into_clips(split='train', raw_music_path='../Dataset/raw_music/', cli
                     sf.write(new_clip_path, audio_clip, sr)
                     clip_count+=1
             except Exception as e:
-                print(f'Error when processing {wav_file} with {interval_splits} intervals splits and {interval_labels} interval labels')
+                print(f'Error when processing {wav_file} with {interval_splits}')
         os.remove(wav_file)
         os.remove(json_file_path)
         print('Done:', wav_file)
@@ -139,7 +138,7 @@ def prepare_attributes(split='train', core_music_folder='../Dataset/raw_music/')
         attribute_dict["keywords"] = ""
         attribute_dict["duration"] = 0
         attribute_dict["bpm"] = ""
-        attribute_dict["genre"] = link_info_dict['genre']
+        attribute_dict["genre"] = ""
         attribute_dict["title"] = ""
         attribute_dict["name"] = music_file_name
         attribute_dict["instrument"] = ""
@@ -164,8 +163,8 @@ def fill_json(music_file):
 
     json_data['duration'] = sec_len
     json_data['sample_rate'] = sr
-    json_data['instrument'] = None
-    json_data['moods'] = None
+    json_data['instrument'] = ""
+    json_data['moods'] = ""
 
     with open(json_file_path, "w") as filled_json_file:
         json.dump(json_data, filled_json_file)
