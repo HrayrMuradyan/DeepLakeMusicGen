@@ -502,7 +502,7 @@ class MusicGenSolver(base.StandardSolver):
         dataset = get_dataset_from_loader(loader)
         dataset_duration = dataset.segment_duration
         assert dataset_duration is not None
-        assert isinstance(dataset, AudioDataset)
+        # assert isinstance(dataset, AudioDataset)
         target_duration = self.cfg.generate.lm.gen_duration
         prompt_duration = self.cfg.generate.lm.prompt_duration
         if target_duration is None:

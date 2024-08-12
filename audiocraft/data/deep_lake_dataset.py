@@ -1,5 +1,6 @@
 import deeplake
 import torch
+import torch.nn.functional as F
 from audiocraft.data.info_audio_dataset import AudioInfo
 from audiocraft.modules.conditioners import WavCondition
 from audiocraft.data.music_dataset import MusicInfo
@@ -17,6 +18,7 @@ class DeepLakeDataset(torch.utils.data.Dataset):
         self.pad = pad
         self.return_info = return_info
         self.num_samples = num_samples
+        self.target_frames = segment_duration * target_sr
 
 
 
@@ -71,6 +73,10 @@ class DeepLakeDataset(torch.utils.data.Dataset):
 
         audio = convert_audio(torch.tensor(audio).unsqueeze(0).to(torch.float32), metadata['sample_rate'], self.target_sr, self.target_channels)
         n_frames = audio.shape[-1]
+
+        if self.pad:
+            audio = F.pad(audio, (0, self.target_frames - n_frames))
+            n_frames = audio.shape[-1]
 
         audio_meta = AudioMeta.from_dict(metadata)
         segment_info = SegmentInfo(audio_meta, seek_time=0., n_frames=n_frames, total_frames=n_frames,

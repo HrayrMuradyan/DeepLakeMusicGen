@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from pathlib import Path
 import typing as tp
+import os
 
 import flashy
 import omegaconf
@@ -461,6 +462,10 @@ class StandardSolver(ABC, flashy.BaseSolver):
             self.save_checkpoints()
         self._start_epoch()
         if flashy.distrib.is_rank_zero():
+            if os.name == 'nt':
+                if os.path.exists(self.xp.link.history_file):
+                    os.remove(self.xp.link.history_file)
+            ##
             self.xp.link.update_history(self.history)
 
     def run_epoch(self):
