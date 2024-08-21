@@ -1,3 +1,4 @@
-pytube==15.0.0
 moviepy==1.0.3
+pytubefix
 notebook
+ipython

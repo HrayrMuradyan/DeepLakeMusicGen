@@ -371,7 +371,6 @@ def get_audio_datasets(cfg: omegaconf.DictConfig,
         elif dataset_type == DatasetType.DEEP_LAKE:
             path = path.replace("\\", "/")
             parts = path.split("hub:/")
-            print(parts)
             if len(parts) != 2:
                 raise ValueError("Invalid path format")
             deeplake_path = "hub://" + parts[1]
